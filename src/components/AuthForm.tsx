@@ -15,6 +15,12 @@ export default function AuthForm() {
     setError('');
 
     try {
+      // Dev bypass: skip email auth for dev@localhost
+      if (process.env.NODE_ENV === 'development' && email === 'dev@localhost') {
+        window.location.href = '/map';
+        return;
+      }
+
       const result = await signIn('resend', {
         email,
         callbackUrl: '/map',

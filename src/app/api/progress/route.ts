@@ -4,7 +4,16 @@ import { redis, redisKey } from '@/lib/redis';
 import { getSkillById } from '@/data/skills';
 import { UserProgress } from '@/types';
 
+const isDev = process.env.NODE_ENV === 'development';
+
+// In-memory progress for dev mode (no Redis needed)
+let devProgress: UserProgress = {};
+
 export async function GET() {
+  if (isDev) {
+    return NextResponse.json({ progress: devProgress });
+  }
+
   const session = await auth();
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -17,11 +26,6 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   const { skillId, completed } = (await req.json()) as {
     skillId: string;
     completed: boolean;
@@ -29,6 +33,20 @@ export async function POST(req: NextRequest) {
 
   if (!getSkillById(skillId)) {
     return NextResponse.json({ error: 'Invalid skill ID' }, { status: 400 });
+  }
+
+  if (isDev) {
+    if (completed) {
+      devProgress[skillId] = { completed: true, completedAt: new Date().toISOString() };
+    } else {
+      delete devProgress[skillId];
+    }
+    return NextResponse.json({ progress: devProgress });
+  }
+
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const key = redisKey(`user:${session.user.email}:progress`);

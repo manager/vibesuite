@@ -10,14 +10,14 @@
 
   /* Text */
   --text-primary:   #1C1C1A;
-  --text-secondary: #8A8480;
-  --text-tertiary:  #B5AFA8;
+  --text-secondary: #756F69;
+  --text-tertiary:  #968F87;
 
   /* Accent */
   --accent:         #B83232;
   --accent-light:   #D4504A;
-  --accent-kanji:   rgba(184, 50, 50, 0.18);
-  --accent-kanji-active: rgba(184, 50, 50, 0.55);
+  --accent-kanji:   rgba(184, 50, 50, 0.3);
+  --accent-kanji-active: rgba(184, 50, 50, 0.6);
 
   /* Borders */
   --border:         #DDD7CE;
@@ -31,6 +31,12 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+
+/* Global smooth interactions */
+a, button, [role="button"] {
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+}
+
 
 body {
   background-color: var(--bg-base);
@@ -49,13 +55,45 @@ body::after {
   z-index: 9999;
 }
 
-/* Slide-in animation for detail panel */
+/* Slide-in/out animation for right detail panel */
 @keyframes slide-in {
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
+@keyframes slide-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
 .animate-slide-in {
-  animation: slide-in 0.25s ease-out;
+  animation: slide-in 0.2s ease-out forwards;
+}
+.animate-slide-out {
+  animation: slide-out 0.2s ease-in forwards;
+}
+
+/* Slide-in animation for left sidebar */
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.animate-sidebar {
+  animation: slide-in-left 0.25s ease-out;
+}
+
+/* Modal fade + scale */
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.97) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes modal-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.97) translateY(8px); }
+}
+.animate-modal-in {
+  animation: modal-in 0.2s ease-out forwards;
+}
+.animate-modal-out {
+  animation: modal-out 0.15s ease-in forwards;
 }
 
 /* Custom scrollbar */

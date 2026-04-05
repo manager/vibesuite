@@ -37,3 +37,17 @@ export interface NodePosition {
   y: number;
   z: number;
 }
+
+export type RecommendationReason =
+  | 'unlocked'
+  | 'hub'
+  | 'difficulty_match'
+  | 'quick_win'
+  | 'diversity';
+
+export interface Recommendation {
+  skill: Skill;
+  score: number;
+  reasons: RecommendationReason[];
+  reasonText: string;
+}

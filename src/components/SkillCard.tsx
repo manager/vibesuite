@@ -1,6 +1,8 @@
 'use client';
 
-import { Skill, SkillCategory, UserProgress } from '@/types';
+import { useState } from 'react';
+import { Skill, SkillCategory } from '@/types';
+import SkillIcon from './SkillIcons';
 
 // Map first letter to katakana
 const KATAKANA_MAP: Record<string, string> = {
@@ -25,15 +27,21 @@ interface SkillCardProps {
   skill: Skill;
   category: SkillCategory;
   completed: boolean;
+  selected: boolean;
   onClick: () => void;
 }
 
-export default function SkillCard({ skill, category, completed, onClick }: SkillCardProps) {
+export default function SkillCard({ skill, category, completed, selected, onClick }: SkillCardProps) {
   const katakana = getKatakana(skill.name);
+  const highlighted = completed || selected;
+  const [showTip, setShowTip] = useState(false);
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
       style={{
         position: 'relative',
         display: 'flex',
@@ -42,38 +50,67 @@ export default function SkillCard({ skill, category, completed, onClick }: Skill
         justifyContent: 'flex-end',
         padding: '1.25rem 0.75rem 1rem',
         minHeight: '120px',
-        background: completed ? 'var(--bg-card-active)' : 'var(--bg-card)',
-        border: `1px solid ${completed ? 'var(--accent)' : 'var(--border)'}`,
-        overflow: 'hidden',
+        background: highlighted ? 'var(--bg-card-active)' : 'var(--bg-card)',
+        border: `1px solid ${highlighted ? 'var(--accent)' : 'var(--border)'}`,
+        overflow: 'visible',
         cursor: 'pointer',
         transition: 'border-color 0.2s ease, background 0.2s ease',
         margin: '-0.5px',
         textAlign: 'center',
         width: '100%',
+        userSelect: 'none',
       }}
       onMouseEnter={(e) => {
-        if (!completed) {
+        setShowTip(true);
+        if (!highlighted) {
           e.currentTarget.style.borderColor = 'var(--accent)';
           e.currentTarget.style.background = 'var(--bg-card-active)';
         }
       }}
       onMouseLeave={(e) => {
-        if (!completed) {
+        setShowTip(false);
+        if (!highlighted) {
           e.currentTarget.style.borderColor = 'var(--border)';
           e.currentTarget.style.background = 'var(--bg-card)';
         }
       }}
     >
-      {/* Kanji watermark */}
+      {/* Custom tooltip */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '100%',
+          left: '50%',
+          transform: `translateX(-50%) translateY(${showTip ? '-4px' : '0px'})`,
+          opacity: showTip ? 1 : 0,
+          pointerEvents: 'none',
+          zIndex: 20,
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.78rem',
+          lineHeight: 1.4,
+          color: 'var(--text-primary)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-strong)',
+          padding: '0.35rem 0.7rem',
+          width: 'max-content',
+          maxWidth: '280px',
+          transition: 'opacity 0.2s ease, transform 0.2s ease',
+        }}
+      >
+        {skill.projectTitle}
+      </div>
+
+      {/* Kanji watermark — top-right corner, red tint */}
       <span
         style={{
           position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
+          top: '0.25rem',
+          right: '0.4rem',
           fontFamily: 'var(--font-japanese)',
-          fontSize: '3.5rem',
-          color: completed ? 'var(--accent-kanji-active)' : 'var(--accent-kanji)',
+          fontSize: '1.6rem',
+          color: completed
+            ? 'var(--accent-kanji-active)'
+            : 'var(--accent-kanji)',
           lineHeight: 1,
           userSelect: 'none',
           transition: 'color 0.2s ease',
@@ -84,30 +121,48 @@ export default function SkillCard({ skill, category, completed, onClick }: Skill
         {katakana}
       </span>
 
-      {/* Completed check */}
+      {/* Learned indicator — accent bar at top */}
       {completed && (
-        <span
+        <div
           style={{
             position: 'absolute',
-            top: '0.5rem',
-            right: '0.5rem',
-            fontSize: '0.65rem',
-            color: 'var(--accent)',
-            fontFamily: 'var(--font-ui)',
-            fontWeight: 600,
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '3px',
+            background: 'var(--accent)',
           }}
-        >
-          ✓
-        </span>
+        />
       )}
+
+      {/* Top-left: skill icon OR checkmark when learned */}
+      <span
+        style={{
+          position: 'absolute',
+          top: '0.5rem',
+          left: '0.5rem',
+          fontSize: completed ? '0.6rem' : '0.9rem',
+          color: completed ? '#fff' : 'var(--text-secondary)',
+          background: completed ? 'var(--accent)' : 'none',
+          width: completed ? '16px' : 'auto',
+          height: completed ? '16px' : 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontFamily: 'var(--font-ui)',
+          fontWeight: 600,
+        }}
+      >
+        {completed ? '✓' : <SkillIcon skillId={skill.id} />}
+      </span>
 
       {/* Skill name */}
       <p
         style={{
           position: 'relative',
-          fontFamily: 'var(--font-display)',
+          fontFamily: 'var(--font-body)',
           fontSize: '0.85rem',
-          fontWeight: 500,
+          fontWeight: 400,
           color: completed ? 'var(--accent)' : 'var(--text-primary)',
           lineHeight: 1.3,
           marginBottom: '0.25rem',
@@ -121,15 +176,15 @@ export default function SkillCard({ skill, category, completed, onClick }: Skill
         style={{
           position: 'relative',
           fontFamily: 'var(--font-ui)',
-          fontSize: '0.6rem',
-          fontWeight: 300,
-          color: 'var(--text-tertiary)',
+          fontSize: '0.65rem',
+          fontWeight: 400,
+          color: 'var(--text-secondary)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
         }}
       >
         {difficultyLabel[skill.difficulty]}
       </p>
-    </button>
+    </div>
   );
 }

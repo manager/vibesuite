@@ -4,7 +4,19 @@ import { redis, redisKey } from '@/lib/redis';
 import { UserProgress } from '@/types';
 import MapClient from './map-client';
 
+const isDev = process.env.NODE_ENV === 'development';
+
 export default async function MapPage() {
+  // In dev mode, skip auth and use mock user
+  if (isDev) {
+    return (
+      <MapClient
+        initialProgress={{}}
+        userEmail="dev@localhost"
+      />
+    );
+  }
+
   const session = await auth();
 
   if (!session?.user?.email) {
