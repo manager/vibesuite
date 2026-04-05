@@ -1,22 +1,26 @@
 # Vibe Suite — AI Skill Guide
 
-Interactive skill map for vibe coders. Track your journey from first prompt to shipped product.
+A companion app for vibe coders learning to build with AI. Not a course — a skill map. Each skill is a real project. The user copies a prompt, pastes it into their AI assistant (Claude, ChatGPT, Cursor), builds the thing, and marks it learned. The app tracks progress and recommends what to tackle next.
+
+Target audience: non-engineers who want to ship products with AI before the market leaves them behind.
 
 @AGENTS.md
 
-## What This Is
+## Core Concept
 
-A web app where users log in via magic link, see a skill map organized into 10 categories (~45 skills total), and mark skills as learned. Each skill is a concrete project ("Build X and learn Y"), not abstract theory. Target audience: non-engineers learning to build products with AI.
+This is a **bridge between the user and their AI tools**. The app doesn't teach — it tells the AI what to teach. Every skill generates a first-person instruction like: *"I want to learn X to know how to Y. Can we do it in my project?"* The user copies it, pastes it into their AI, and builds.
 
-The app has a strong editorial voice — it's blunt, motivational, and doesn't sugarcoat the stakes of not learning AI skills.
+The editorial voice is blunt. No corporate fluff, no inspirational posters. The "Why do I need this?" modal literally tells people they're becoming irrelevant.
 
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router, TypeScript)
-- **Styling**: Tailwind CSS + keepsimple design language (see Design section)
+- **Styling**: Tailwind CSS + keepsimple design language
+- **3D**: Three.js + @react-three/fiber (landing page particle scene)
 - **Auth**: NextAuth.js v5 (Auth.js) with Resend magic link
 - **Database**: Upstash Redis (@upstash/redis) — shared with kemmio project
 - **Deploy**: Vercel (auto-deploys from `master` branch)
+- **URL**: https://vibesuite.vercel.app
 
 ## Critical Rules
 
@@ -28,33 +32,37 @@ The Redis DB is shared with the **kemmio** project. Kemmio uses keys: `leaderboa
 ### Single Source of Truth
 `src/data/skills.ts` is THE data file. Adding a skill = adding an object to this file. Everything (cards, progress, percentages, recommendations) derives from it automatically. Never hardcode skill data elsewhere.
 
+### Katakana as Visual Identity
+Skill cards do NOT have SVG icons. Each card shows a **katakana character** derived from the skill name's first letter (see `KATAKANA_MAP` in SkillCard.tsx). The katakana appears centered at the top of each tile, and next to the skill name in the detail panel and recommendation modal. `SkillIcons.tsx` was deleted — do not recreate it.
+
 ### Dev Mode
-In development (`NODE_ENV=development`), auth is bypassed and progress is stored in-memory. Enter `dev@localhost` on the login page to go directly to `/map`. See `src/components/AuthForm.tsx`, `src/app/map/page.tsx`, `src/middleware.ts`, and `src/app/api/progress/route.ts`.
+In development (`NODE_ENV=development`), auth is bypassed and progress is stored in-memory. Enter `dev@localhost` on the login page (input is `type="text"` in dev to accept non-TLD emails). The landing page skips the `auth()` call in dev to avoid Redis errors. See `src/components/AuthForm.tsx`, `src/app/map/page.tsx`, `src/app/page.tsx`, `src/middleware.ts`, and `src/app/api/progress/route.ts`.
 
 ### Design Language: keepsimple
 This project uses the **keepsimple** aesthetic. The full spec is in `keepsimple-style-extracted/keepsimple-style/SKILL.md`. Key points:
 - Warm parchment backgrounds (`#F4EFE6`), never pure white
 - Fonts: Playfair Display (headings in detail panel only), EB Garamond (body text, nav items, card names), Jost (UI labels, badges, counters)
 - Muted crimson accent (`#B83232`) — used sparingly on borders, rules, kanji, active states, selected items
-- Kanji/katakana watermarks on skill cards (red-tinted, top-right corner)
+- Katakana watermarks on skill cards (red-tinted, center-top)
 - Paper grain texture via SVG filter on `body::after`
-- No shadows, no gradients on fills, no heavy visual weight
+- No shadows, no gradients on fills, no heavy visual weight, no border-radius (square aesthetic)
 - All warm-toned grays, never cool/blue-gray
 
 ### Font Consistency Rules
 The app uses a strict 3-tier font system. Do NOT mix these:
-- **Section labels** (TOOLS, PREREQUISITES, CATEGORIES, etc.): Jost (`font-ui`), 0.65rem, uppercase, 0.15em tracking, `--text-tertiary`
+- **Section labels** (TOOLS, HOW TO LEARN THIS, CATEGORIES, etc.): Jost (`font-ui`), 0.65rem, uppercase, 0.15em tracking, `--text-tertiary`
 - **Body/item text** (nav items, card names, descriptions, prerequisites): EB Garamond (`font-body`), 0.85rem, `--text-secondary`
 - **Tags/badges** (counters, difficulty, time, tool tags): Jost (`font-ui`), 0.65rem, `--text-tertiary`
 - **Headings**: Playfair Display (`font-display`), 1.4rem — ONLY in the right detail panel skill title
 
 ### UX Principles
 - **Never push content when panels open.** Left sidebar and right detail panel are fixed overlays (z-index 50). Main content is always centered.
-- **Smooth everything.** All interactive elements have 0.15s ease transitions (globally set in CSS). Panel open/close animations are 0.2s. Category switching fades content. Progress bar lerps smoothly.
+- **Smooth everything.** All interactive elements have 0.15s ease transitions (globally set in CSS). Panel open/close: 0.2s. Category switching AND filter switching: content fades out 150ms, swaps, fades in. Progress bar lerps smoothly. Never jump.
+- **Hover + active states on all buttons.** Hover fills or changes border/text to accent. Mousedown scales to 96-98%. See ENTER, Mark as Learned, Copy Instruction buttons.
 - **Text is not selectable** on skill cards, section headers, and counters (`userSelect: 'none'`).
 - **Close on "Mark as Learned"** — the detail panel closes when user marks a skill as learned (not on unmark).
 - **Click-to-dismiss** — clicking empty space in the main skill map area closes the right panel. Clicking cards does NOT close it (stopPropagation on card grid).
-- **First-person instructions** — the "Paste this instruction to your project" block converts "your" → "my" and "you" → "I" from projectTitle. The template is: `I want to learn "X" to know how to <projectTitle>. Can we do it in my project?`
+- **First-person instructions** — the instruction block converts "your" → "my" and "you" → "I" from projectTitle. Template: `I want to learn "X" to know how to <projectTitle>. Can we do it in my project?`
 
 ## Architecture
 
@@ -65,21 +73,21 @@ src/
 │   ├── api/progress/route.ts            — GET/POST user skill progress
 │   ├── map/
 │   │   ├── page.tsx                     — Server component (auth + Redis fetch)
-│   │   └── map-client.tsx               — Client orchestrator (ALL state + layout)
-│   ├── page.tsx                         — Landing page (redirects if authed)
+│   │   └── map-client.tsx               — Client orchestrator (ALL state + layout + guide overlay)
+│   ├── page.tsx                         — Landing page (skips auth in dev)
 │   ├── layout.tsx                       — Root layout with Providers
 │   ├── providers.tsx                    — SessionProvider wrapper
-│   └── globals.css                      — Design tokens, grain texture, animations
+│   └── globals.css                      — Design tokens, grain texture, animations, keyframes
 ├── components/
-│   ├── AuthForm.tsx                     — Magic link email form (dev bypass for dev@localhost)
+│   ├── AuthForm.tsx                     — Magic link form (dev bypass, onEnter callback for loader)
 │   ├── CategoryIcons.tsx                — Monochrome SVG icons for each category
-│   ├── CategoryNav.tsx                  — Left sidebar: categories + "What to Learn Next" banner
-│   ├── LandingClient.tsx                — Landing page UI with floating kanji
+│   ├── CategoryNav.tsx                  — Left sidebar: categories + recommendations + "Why do I need this?"
+│   ├── LandingClient.tsx                — Landing page: Three.js scene + auth form + pseudo-loader
+│   ├── LandingScene.tsx                 — Three.js: floating kanji, particles, ink lines, mouse parallax
 │   ├── ProgressHeader.tsx               — Top bar: logo, Canvas progress bar with milestones, stats
 │   ├── RecommendationModal.tsx          — "What to Learn Next?" center-screen modal
-│   ├── SkillCard.tsx                    — Card with katakana watermark, icon, custom tooltip
-│   ├── SkillDetailPanel.tsx             — Right slide-in panel with LLM instruction block
-│   └── SkillIcons.tsx                   — Monochrome SVG icons for each individual skill
+│   ├── SkillCard.tsx                    — Card with katakana watermark (center-top), custom tooltip
+│   └── SkillDetailPanel.tsx             — Right panel: skill details + emphasized "How to learn this" block
 ├── data/
 │   └── skills.ts                        — ALL 10 categories + 45 skills + helpers
 ├── lib/
@@ -93,26 +101,39 @@ src/
 
 ## Key Features
 
+### Landing Page (LandingClient.tsx + LandingScene.tsx)
+- Three.js background: 60 floating particles (warm/faint/accent), 18 kanji sprites drifting upward, 8 thin ink lines, gentle mouse-follow camera
+- Content fades in on load (0.8s)
+- On submit: 4-second pseudo-loader ("Generating a plan to keep you relevant...", "Scanning the skill gap...", "Calibrating difficulty curve...", "Mapping your blind spots...") with smooth crimson progress bar, then navigates to `/map`
+
+### Guide Overlay (map-client.tsx)
+Full-screen 1:1 replica of the actual UI with real data, triggered by "First time? Click here". Three numbered steps:
+1. **Pick a skill** (center annotation over real card grid)
+2. **Give it to your AI** (inline on the instruction block in right panel, pulsing glow)
+3. **Track your progress** (at bottom of right panel next to Mark as Learned button, pulsing glow)
+
+Left panel shows "Navigate" annotation. Top bar: *"Your AI does the teaching. This map tells it what."*
+
 ### Progress Bar (ProgressHeader.tsx)
-Canvas-rendered with 60fps animation loop. Features:
-- Smooth lerp when progress changes (4% per frame)
-- 4 milestones: Observer (20%), Explorer (50%), Master (80%), Singularity (100%)
-- Per-milestone hover: radial red glow, diamond grows, label/kanji turn red, smooth lerp
-- Pulsating leading dot at current progress position
-- "TO THE GLORY" faint breathing text
-- Milestone tooltips appear below the bar with skill count needed
+Canvas-rendered with 60fps animation loop. Smooth lerp (4% per frame), 4 milestones (Observer 20%, Explorer 50%, Master 80%, Singularity 100%), per-milestone hover with red glow, pulsating leading dot, "TO THE GLORY" breathing text.
+
+### "How to Learn This" Section (SkillDetailPanel.tsx)
+Emphasized instruction block in the right panel with accent border + top bar. Contains:
+- Collapsible "First time? Read this" intro guide (3 steps explaining the copy→paste→build flow)
+- The instruction text in `--text-primary` (not secondary)
+- Full-width Copy Instruction button with hover fill + press scale
 
 ### Recommendation Engine (lib/recommendations.ts)
-Local scoring with no AI dependency:
-- +30 unlocked (all prereqs done), +20 hub (unlocks 2+ skills), +10 difficulty match, +5 quick win, -50 locked
-- Greedy selection with category diversity penalty
-- Returns typed `Recommendation[]` with reasons for display
+Local scoring with no AI dependency: +30 unlocked, +20 hub, +10 difficulty match, +5 quick win, -50 locked. Greedy selection with category diversity penalty. Returns `Recommendation[]` with reasons.
 
-### Search (in map-client.tsx)
-Filters skills across name, projectTitle, and projectDescription. Left-aligned search bar between page title and categories.
+### Show Filter (map-client.tsx)
+Three-button toggle next to search: ALL | LEARNED | NOT LEARNED. Switching uses same fade transition as category switching (150ms out, swap, fade in). Active button fills accent red.
+
+### Search (map-client.tsx)
+Filters skills across name, projectTitle, and projectDescription. Left-aligned between page title and categories.
 
 ### "Why do I need this?" Modal
-Motivational modal with background images (public/why-bg-1.jpg, why-bg-2.webp, why-bg-3.jpg) — grayscale masked, subtle. The copy is blunt and intentionally uncomfortable.
+Located in the left sidebar bottom. Motivational modal with grayscale background images. Copy is blunt: "Most knowledge workers are becoming irrelevant. Not next year. Right now."
 
 ## Env Variables
 
@@ -153,19 +174,19 @@ NEXTAUTH_URL=https://vibesuite.vercel.app
 ## Common Tasks
 
 ### Add a new skill
-Edit `src/data/skills.ts` → add a `Skill` object to the appropriate category's `skills` array. Add a corresponding icon in `src/components/SkillIcons.tsx`. The card, progress tracking, percentages, and recommendations update automatically.
+Edit `src/data/skills.ts` → add a `Skill` object to the appropriate category's `skills` array. The katakana is auto-derived from the first letter. Card, progress tracking, percentages, recommendations, and search all update automatically.
 
 ### Add a new category
 Edit `src/data/skills.ts` → add a `SkillCategory` object to the `categories` array. Add a corresponding icon in `src/components/CategoryIcons.tsx`.
 
 ### Run locally
 ```bash
-npm run dev     # starts on port 3000
+npm run dev -- -p 3099    # dev server on port 3099
 # Enter dev@localhost on login page — auth is skipped in dev mode
 ```
 
 ### Deploy
-Push to `master` → Vercel auto-deploys. Or run `npm run build` locally to check first.
+Push to `master` → Vercel auto-deploys. Or `npx vercel --prod --yes` from project root (`.vercel/project.json` is configured).
 
 ## Language
 All UI and content is in **English**.
