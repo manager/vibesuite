@@ -15,61 +15,95 @@ export default function CategoryNav({
   onSelectCategory,
 }: CategoryNavProps) {
   return (
-    <nav className="fixed left-0 top-14 bottom-0 z-30 w-56 bg-black/40 backdrop-blur-sm border-r border-white/5 overflow-y-auto hidden lg:block">
-      <div className="p-3 space-y-1">
-        {/* Overview button */}
-        <button
-          onClick={() => onSelectCategory(null)}
-          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
-            activeCategoryId === null
-              ? 'bg-white/10 text-white'
-              : 'text-white/50 hover:text-white/70 hover:bg-white/5'
-          }`}
-        >
-          🌐 Overview
-        </button>
+    <nav
+      style={{
+        position: 'fixed',
+        left: 0,
+        top: '48px',
+        bottom: 0,
+        width: '220px',
+        zIndex: 30,
+        background: 'var(--bg-base)',
+        borderRight: '1px solid var(--border)',
+        overflowY: 'auto',
+        padding: '1.5rem 0',
+      }}
+    >
+      {/* Overview */}
+      <button
+        onClick={() => onSelectCategory(null)}
+        style={{
+          display: 'block',
+          width: '100%',
+          textAlign: 'left',
+          padding: '0.5rem 1.25rem',
+          fontFamily: 'var(--font-ui)',
+          fontSize: '0.7rem',
+          fontWeight: activeCategoryId === null ? 500 : 400,
+          letterSpacing: '0.15em',
+          textTransform: 'uppercase',
+          color: activeCategoryId === null ? 'var(--text-primary)' : 'var(--text-secondary)',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          marginBottom: '0.75rem',
+        }}
+      >
+        All Categories
+      </button>
 
-        {categories.map((cat) => {
-          const total = cat.skills.length;
-          const done = cat.skills.filter((s) => progress[s.id]?.completed).length;
-          const isActive = activeCategoryId === cat.id;
+      {/* Divider */}
+      <div
+        style={{
+          height: '1px',
+          background: 'var(--border)',
+          margin: '0 1.25rem 0.75rem',
+        }}
+      />
 
-          return (
-            <button
-              key={cat.id}
-              onClick={() => onSelectCategory(cat.id)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-all ${
-                isActive
-                  ? 'bg-white/10 text-white'
-                  : 'text-white/50 hover:text-white/70 hover:bg-white/5'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="truncate">
-                  {cat.icon} {cat.name}
-                </span>
-                <span
-                  className="text-xs ml-2 shrink-0"
-                  style={{ color: done === total && total > 0 ? cat.color : undefined }}
-                >
-                  {done}/{total}
-                </span>
-              </div>
+      {categories.map((cat) => {
+        const total = cat.skills.length;
+        const done = cat.skills.filter((s) => progress[s.id]?.completed).length;
+        const isActive = activeCategoryId === cat.id;
 
-              {/* Mini progress bar */}
-              <div className="mt-1 h-0.5 bg-white/5 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${total > 0 ? (done / total) * 100 : 0}%`,
-                    backgroundColor: cat.color,
-                  }}
-                />
-              </div>
-            </button>
-          );
-        })}
-      </div>
+        return (
+          <button
+            key={cat.id}
+            onClick={() => onSelectCategory(cat.id)}
+            style={{
+              display: 'block',
+              width: '100%',
+              textAlign: 'left',
+              padding: '0.5rem 1.25rem',
+              fontFamily: 'var(--font-ui)',
+              fontSize: '0.78rem',
+              fontWeight: 400,
+              color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+              background: isActive ? 'var(--bg-card)' : 'transparent',
+              border: 'none',
+              borderRight: isActive ? '2px solid var(--accent)' : '2px solid transparent',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
+              marginBottom: '0.125rem',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>
+                {cat.icon} {cat.name}
+              </span>
+              <span
+                style={{
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: '0.65rem',
+                  color: done === total && total > 0 ? 'var(--accent)' : 'var(--text-tertiary)',
+                }}
+              >
+                {done}/{total}
+              </span>
+            </div>
+          </button>
+        );
+      })}
     </nav>
   );
 }

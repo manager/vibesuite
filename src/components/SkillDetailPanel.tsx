@@ -1,7 +1,7 @@
 'use client';
 
 import { Skill, SkillCategory, UserProgress } from '@/types';
-import { getDependencies, getSkillById } from '@/data/skills';
+import { getDependencies } from '@/data/skills';
 
 interface SkillDetailPanelProps {
   skill: Skill;
@@ -12,10 +12,10 @@ interface SkillDetailPanelProps {
   onSelectSkill: (skillId: string) => void;
 }
 
-const difficultyConfig = {
-  beginner: { label: 'Beginner', color: 'bg-green-500/20 text-green-400 border-green-500/30', dot: '🟢' },
-  intermediate: { label: 'Intermediate', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', dot: '🟡' },
-  advanced: { label: 'Advanced', color: 'bg-red-500/20 text-red-400 border-red-500/30', dot: '🔴' },
+const difficultyDisplay: Record<string, { label: string; color: string }> = {
+  beginner: { label: 'Beginner', color: '#6B8E6B' },
+  intermediate: { label: 'Intermediate', color: '#B8960B' },
+  advanced: { label: 'Advanced', color: 'var(--accent)' },
 };
 
 export default function SkillDetailPanel({
@@ -28,70 +28,178 @@ export default function SkillDetailPanel({
 }: SkillDetailPanelProps) {
   const isCompleted = !!progress[skill.id]?.completed;
   const deps = getDependencies(skill.id);
-  const diff = difficultyConfig[skill.difficulty];
-
-  // Check if all dependencies are met
-  const depsUnmet = deps.filter((d) => !progress[d.id]?.completed);
+  const diff = difficultyDisplay[skill.difficulty];
 
   return (
-    <div className="fixed right-0 top-0 h-full w-full max-w-md z-50 animate-slide-in">
+    <div className="animate-slide-in"
+      style={{
+        position: 'fixed',
+        right: 0,
+        top: 0,
+        height: '100%',
+        width: '100%',
+        maxWidth: '420px',
+        zIndex: 50,
+      }}
+    >
       <div
-        className="h-full bg-black/85 backdrop-blur-xl border-l-2 overflow-y-auto"
-        style={{ borderColor: category.color }}
+        style={{
+          height: '100%',
+          background: 'var(--bg-base)',
+          borderLeft: '1px solid var(--border)',
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
       >
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-4">
-            <div
-              className="text-xs font-medium px-2 py-1 rounded-full border"
+        <div style={{ padding: '2rem 1.75rem', flex: 1 }}>
+          {/* Close + Category */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <span
               style={{
-                color: category.color,
-                borderColor: category.color + '40',
-                backgroundColor: category.color + '15',
+                fontFamily: 'var(--font-ui)',
+                fontSize: '0.6rem',
+                fontWeight: 500,
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: 'var(--text-secondary)',
               }}
             >
               {category.icon} {category.name}
-            </div>
+            </span>
             <button
               onClick={onClose}
-              className="text-white/40 hover:text-white transition-colors text-xl leading-none"
+              style={{
+                fontFamily: 'var(--font-ui)',
+                fontSize: '1.1rem',
+                color: 'var(--text-tertiary)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                lineHeight: 1,
+              }}
             >
               ✕
             </button>
           </div>
 
           {/* Skill name */}
-          <h2 className="text-xl font-bold mb-4">{skill.name}</h2>
+          <h2
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '1.5rem',
+              fontWeight: 400,
+              marginBottom: '1rem',
+              lineHeight: 1.3,
+            }}
+          >
+            {skill.name}
+          </h2>
 
           {/* Difficulty + Time */}
-          <div className="flex items-center gap-3 mb-5">
-            <span className={`text-xs px-2 py-1 rounded border ${diff.color}`}>
-              {diff.dot} {diff.label}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.75rem' }}>
+            <span
+              style={{
+                fontFamily: 'var(--font-ui)',
+                fontSize: '0.65rem',
+                fontWeight: 500,
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                color: diff.color,
+                border: `1px solid ${diff.color}40`,
+                padding: '0.2rem 0.6rem',
+              }}
+            >
+              {diff.label}
             </span>
-            <span className="text-xs text-white/50">⏱ {skill.timeEstimate}</span>
+            <span
+              style={{
+                fontFamily: 'var(--font-ui)',
+                fontSize: '0.7rem',
+                color: 'var(--text-tertiary)',
+              }}
+            >
+              {skill.timeEstimate}
+            </span>
           </div>
 
-          {/* Project title */}
-          <div className="mb-4">
-            <div className="text-xs text-white/40 uppercase tracking-wider mb-1">
-              What you&apos;ll build
-            </div>
-            <div className="text-sm font-medium text-white/90">{skill.projectTitle}</div>
-          </div>
+          {/* Red accent rule */}
+          <div style={{ width: '2rem', height: '2px', background: 'var(--accent)', marginBottom: '1.25rem' }} />
+
+          {/* What you'll build */}
+          <p
+            style={{
+              fontFamily: 'var(--font-ui)',
+              fontSize: '0.6rem',
+              fontWeight: 500,
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              color: 'var(--text-tertiary)',
+              marginBottom: '0.35rem',
+            }}
+          >
+            What you&apos;ll build
+          </p>
+          <p
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '1rem',
+              fontWeight: 500,
+              color: 'var(--text-primary)',
+              marginBottom: '1rem',
+              lineHeight: 1.4,
+            }}
+          >
+            {skill.projectTitle}
+          </p>
 
           {/* Description */}
-          <p className="text-sm text-white/60 leading-relaxed mb-5">
+          <p
+            style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.9rem',
+              lineHeight: 1.75,
+              color: 'var(--text-secondary)',
+              marginBottom: '1.5rem',
+            }}
+          >
             {skill.projectDescription}
           </p>
 
           {/* Tools */}
-          <div className="mb-5">
-            <div className="text-xs text-white/40 uppercase tracking-wider mb-2">Tools</div>
-            <div className="flex flex-wrap gap-2">
+          <div style={{ marginBottom: '1.5rem' }}>
+            <p
+              style={{
+                fontFamily: 'var(--font-ui)',
+                fontSize: '0.6rem',
+                fontWeight: 500,
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: 'var(--text-tertiary)',
+                marginBottom: '0.5rem',
+              }}
+            >
+              Tools
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
               {skill.tools.map((tool) => (
                 <span
                   key={tool}
-                  className="text-xs px-2 py-1 rounded bg-white/5 border border-white/10 text-white/70"
+                  style={{
+                    fontFamily: 'var(--font-ui)',
+                    fontSize: '0.65rem',
+                    padding: '0.2rem 0.6rem',
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-secondary)',
+                  }}
                 >
                   {tool}
                 </span>
@@ -101,55 +209,71 @@ export default function SkillDetailPanel({
 
           {/* Dependencies */}
           {deps.length > 0 && (
-            <div className="mb-6">
-              <div className="text-xs text-white/40 uppercase tracking-wider mb-2">
+            <div style={{ marginBottom: '2rem' }}>
+              <p
+                style={{
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: '0.6rem',
+                  fontWeight: 500,
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  color: 'var(--text-tertiary)',
+                  marginBottom: '0.5rem',
+                }}
+              >
                 Prerequisites
-              </div>
-              <div className="space-y-1">
-                {deps.map((dep) => {
-                  const depCompleted = !!progress[dep.id]?.completed;
-                  return (
-                    <button
-                      key={dep.id}
-                      onClick={() => onSelectSkill(dep.id)}
-                      className="flex items-center gap-2 text-sm text-white/60 hover:text-white/90 transition-colors w-full text-left"
-                    >
-                      <span className={depCompleted ? 'text-green-400' : 'text-white/30'}>
-                        {depCompleted ? '✓' : '○'}
-                      </span>
-                      {dep.name}
-                    </button>
-                  );
-                })}
-              </div>
+              </p>
+              {deps.map((dep) => {
+                const depDone = !!progress[dep.id]?.completed;
+                return (
+                  <button
+                    key={dep.id}
+                    onClick={() => onSelectSkill(dep.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.85rem',
+                      color: depDone ? 'var(--accent)' : 'var(--text-secondary)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '0.25rem 0',
+                      width: '100%',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span>{depDone ? '✓' : '○'}</span>
+                    {dep.name}
+                  </button>
+                );
+              })}
             </div>
           )}
+        </div>
 
-          {/* Toggle button */}
+        {/* Toggle button — pinned to bottom */}
+        <div style={{ padding: '1.25rem 1.75rem', borderTop: '1px solid var(--border)' }}>
           <button
             onClick={() => onToggle(skill.id, !isCompleted)}
-            className="w-full py-3 rounded-lg font-medium text-sm transition-all"
-            style={
-              isCompleted
-                ? {
-                    background: 'transparent',
-                    border: `1px solid ${category.color}40`,
-                    color: category.color,
-                  }
-                : {
-                    background: category.color,
-                    color: '#000',
-                  }
-            }
+            style={{
+              width: '100%',
+              fontFamily: 'var(--font-ui)',
+              fontSize: '0.7rem',
+              fontWeight: 500,
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
+              padding: '0.75rem 0',
+              border: isCompleted ? '1px solid var(--border-strong)' : '1px solid var(--accent)',
+              background: isCompleted ? 'transparent' : 'var(--accent)',
+              color: isCompleted ? 'var(--text-secondary)' : '#fff',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
           >
-            {isCompleted ? 'Unmark as Learned' : 'Mark as Learned ✓'}
+            {isCompleted ? 'Unmark as Learned' : 'Mark as Learned'}
           </button>
-
-          {depsUnmet.length > 0 && !isCompleted && (
-            <p className="text-xs text-yellow-500/70 mt-2 text-center">
-              Tip: complete prerequisites first for the best learning path
-            </p>
-          )}
         </div>
       </div>
     </div>
