@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 
-export default function AuthForm() {
+interface AuthFormProps {
+  onEnter?: () => void;
+}
+
+export default function AuthForm({ onEnter }: AuthFormProps) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -17,7 +21,11 @@ export default function AuthForm() {
     try {
       // Dev bypass: skip email auth for dev@localhost
       if (process.env.NODE_ENV === 'development' && email === 'dev@localhost') {
-        window.location.href = '/map';
+        if (onEnter) {
+          onEnter();
+        } else {
+          window.location.href = '/map';
+        }
         return;
       }
 
@@ -78,7 +86,7 @@ export default function AuthForm() {
     <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '360px' }}>
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <input
-          type="email"
+          type="text"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="your@email.com"
@@ -110,6 +118,32 @@ export default function AuthForm() {
             cursor: loading ? 'not-allowed' : 'pointer',
             opacity: loading ? 0.5 : 1,
             whiteSpace: 'nowrap' as const,
+            transition: 'background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease',
+          }}
+          onMouseEnter={(e) => {
+            if (!loading) {
+              e.currentTarget.style.background = 'var(--accent)';
+              e.currentTarget.style.borderColor = 'var(--accent)';
+              e.currentTarget.style.color = '#fff';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!loading) {
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.borderColor = 'var(--border-strong)';
+              e.currentTarget.style.color = 'var(--text-primary)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }
+          }}
+          onMouseDown={(e) => {
+            if (!loading) {
+              e.currentTarget.style.transform = 'scale(0.96)';
+            }
+          }}
+          onMouseUp={(e) => {
+            if (!loading) {
+              e.currentTarget.style.transform = 'scale(1)';
+            }
           }}
         >
           {loading ? '...' : 'Enter'}

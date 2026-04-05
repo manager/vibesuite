@@ -96,6 +96,18 @@ body::after {
   animation: modal-out 0.15s ease-in forwards;
 }
 
+/* Guide overlay pulse for instruction block */
+@keyframes guidePulse {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.4; }
+}
+
+/* Loader message fade */
+@keyframes loaderFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 5px;

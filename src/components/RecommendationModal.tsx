@@ -4,7 +4,17 @@ import { useState, useEffect } from 'react';
 import { Recommendation } from '@/types';
 import { getCategoryBySkillId } from '@/data/skills';
 import CategoryIcon from './CategoryIcons';
-import SkillIcon from './SkillIcons';
+
+const KATAKANA_MAP: Record<string, string> = {
+  a: 'ア', b: 'ビ', c: 'ク', d: 'デ', e: 'エ', f: 'フ', g: 'グ', h: 'ハ',
+  i: 'イ', j: 'ジ', k: 'カ', l: 'ル', m: 'マ', n: 'ナ', o: 'オ', p: 'プ',
+  q: 'ク', r: 'ラ', s: 'サ', t: 'タ', u: 'ウ', v: 'ヴ', w: 'ワ', x: 'シ',
+  y: 'ヤ', z: 'ズ',
+};
+function getKatakana(name: string): string {
+  const first = name.charAt(0).toLowerCase();
+  return KATAKANA_MAP[first] || 'ス';
+}
 
 interface RecommendationModalProps {
   recommendations: Recommendation[];
@@ -212,8 +222,8 @@ export default function RecommendationModal({
                     gap: '0.5rem',
                   }}
                 >
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', flexShrink: 0 }}>
-                    <SkillIcon skillId={rec.skill.id} />
+                  <span style={{ fontFamily: 'var(--font-japanese)', fontSize: '1.1rem', color: 'var(--accent-kanji-active)', flexShrink: 0, lineHeight: 1 }}>
+                    {getKatakana(rec.skill.name)}
                   </span>
                   {rec.skill.name}
                 </p>

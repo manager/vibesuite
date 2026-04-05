@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Skill, SkillCategory } from '@/types';
-import SkillIcon from './SkillIcons';
 
 // Map first letter to katakana
 const KATAKANA_MAP: Record<string, string> = {
@@ -100,21 +99,22 @@ export default function SkillCard({ skill, category, completed, selected, onClic
         {skill.projectTitle}
       </div>
 
-      {/* Kanji watermark — top-right corner, red tint */}
+      {/* Kanji — center-top of tile */}
       <span
         style={{
           position: 'absolute',
-          top: '0.25rem',
-          right: '0.4rem',
+          top: '0.6rem',
+          left: '50%',
+          transform: 'translateX(-50%)',
           fontFamily: 'var(--font-japanese)',
-          fontSize: '1.6rem',
+          fontSize: '2.4rem',
           color: completed
             ? 'var(--accent-kanji-active)'
             : 'var(--accent-kanji)',
           lineHeight: 1,
           userSelect: 'none',
           transition: 'color 0.2s ease',
-          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
         }}
         aria-hidden="true"
       >
@@ -135,26 +135,28 @@ export default function SkillCard({ skill, category, completed, selected, onClic
         />
       )}
 
-      {/* Top-left: skill icon OR checkmark when learned */}
-      <span
-        style={{
-          position: 'absolute',
-          top: '0.5rem',
-          left: '0.5rem',
-          fontSize: completed ? '0.6rem' : '0.9rem',
-          color: completed ? '#fff' : 'var(--text-secondary)',
-          background: completed ? 'var(--accent)' : 'none',
-          width: completed ? '16px' : 'auto',
-          height: completed ? '16px' : 'auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontFamily: 'var(--font-ui)',
-          fontWeight: 600,
-        }}
-      >
-        {completed ? '✓' : <SkillIcon skillId={skill.id} />}
-      </span>
+      {/* Checkmark when learned */}
+      {completed && (
+        <span
+          style={{
+            position: 'absolute',
+            top: '0.5rem',
+            left: '0.5rem',
+            fontSize: '0.6rem',
+            color: '#fff',
+            background: 'var(--accent)',
+            width: '16px',
+            height: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontFamily: 'var(--font-ui)',
+            fontWeight: 600,
+          }}
+        >
+          ✓
+        </span>
+      )}
 
       {/* Skill name */}
       <p

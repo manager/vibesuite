@@ -3,7 +3,7 @@ import { Providers } from './providers';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Vibe Code Skill Map',
+  title: 'AI SKILL GUIDE | KeepSimple',
   description: 'Interactive skill tree for vibe coders',
 };
 

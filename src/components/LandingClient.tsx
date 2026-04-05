@@ -1,10 +1,158 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import AuthForm from '@/components/AuthForm';
+import dynamic from 'next/dynamic';
 
-const KANJI_CHARS = ['技', '道', '創', '学', '知', '力', '心', '夢'];
+const LandingScene = dynamic(() => import('./LandingScene'), { ssr: false });
+
+const LOADER_MESSAGES = [
+  'Generating a plan to keep you relevant...',
+  'Scanning the skill gap...',
+  'Calibrating difficulty curve...',
+  'Mapping your blind spots...',
+];
+
+function LoaderScreen() {
+  const [msgIndex, setMsgIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [fadingOut, setFadingOut] = useState(false);
+
+  useEffect(() => {
+    // Cycle messages
+    const msgTimer = setInterval(() => {
+      setMsgIndex((prev) => (prev + 1) % LOADER_MESSAGES.length);
+    }, 1200);
+
+    // Smooth progress bar
+    const progressTimer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) return 100;
+        // Ease out — slows down as it approaches 100
+        const remaining = 100 - prev;
+        return prev + remaining * 0.04;
+      });
+    }, 30);
+
+    // Navigate after 4s
+    const navTimer = setTimeout(() => {
+      setFadingOut(true);
+      setTimeout(() => {
+        window.location.href = '/map';
+      }, 400);
+    }, 4000);
+
+    return () => {
+      clearInterval(msgTimer);
+      clearInterval(progressTimer);
+      clearTimeout(navTimer);
+    };
+  }, []);
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 100,
+        background: 'var(--bg-base)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: fadingOut ? 0 : 1,
+        transition: 'opacity 0.4s ease',
+      }}
+    >
+      {/* Kanji watermark behind loader */}
+      <span
+        style={{
+          position: 'absolute',
+          fontFamily: 'var(--font-japanese)',
+          fontSize: '12rem',
+          color: 'var(--accent-kanji)',
+          userSelect: 'none',
+          opacity: 0.5,
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          lineHeight: 1,
+        }}
+        aria-hidden="true"
+      >
+        道
+      </span>
+
+      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: '100%', maxWidth: '360px', padding: '0 2rem' }}>
+        {/* Message */}
+        <p
+          key={msgIndex}
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '1.05rem',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.6,
+            marginBottom: '2rem',
+            animation: 'loaderFadeIn 0.3s ease',
+          }}
+        >
+          {LOADER_MESSAGES[msgIndex]}
+        </p>
+
+        {/* Progress bar */}
+        <div
+          style={{
+            width: '100%',
+            height: '2px',
+            background: 'var(--border)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              height: '100%',
+              width: `${progress}%`,
+              background: 'var(--accent)',
+              transition: 'width 0.05s linear',
+            }}
+          />
+        </div>
+
+        {/* Percentage */}
+        <p
+          style={{
+            marginTop: '0.75rem',
+            fontFamily: 'var(--font-ui)',
+            fontSize: '0.6rem',
+            fontWeight: 500,
+            letterSpacing: '0.2em',
+            color: 'var(--text-tertiary)',
+          }}
+        >
+          {Math.round(progress)}%
+        </p>
+      </div>
+    </div>
+  );
+}
 
 export default function LandingClient() {
+  const [visible, setVisible] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 100);
+    return () => clearTimeout(t);
+  }, []);
+
+  const handleEnter = useCallback(() => {
+    setShowLoader(true);
+  }, []);
+
   return (
     <main
       style={{
@@ -18,36 +166,23 @@ export default function LandingClient() {
         overflow: 'hidden',
       }}
     >
-      {/* Floating kanji watermarks */}
+      {/* Loader overlay */}
+      {showLoader && <LoaderScreen />}
+
+      {/* Three.js background */}
+      <LandingScene />
+
+      {/* Content — floats above the 3D scene */}
       <div
         style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          overflow: 'hidden',
+          position: 'relative',
+          zIndex: 1,
+          textAlign: 'center',
+          opacity: visible ? 1 : 0,
+          transform: visible ? 'translateY(0)' : 'translateY(12px)',
+          transition: 'opacity 0.8s ease, transform 0.8s ease',
         }}
       >
-        {KANJI_CHARS.map((k, i) => (
-          <span
-            key={i}
-            style={{
-              position: 'absolute',
-              fontFamily: 'var(--font-japanese)',
-              fontSize: `${3 + Math.random() * 4}rem`,
-              color: 'var(--accent-kanji)',
-              left: `${10 + (i % 4) * 22}%`,
-              top: `${8 + Math.floor(i / 4) * 45}%`,
-              transform: `rotate(${-10 + Math.random() * 20}deg)`,
-              userSelect: 'none',
-            }}
-          >
-            {k}
-          </span>
-        ))}
-      </div>
-
-      {/* Content */}
-      <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
         {/* Diamond accent */}
         <div
           style={{
@@ -116,7 +251,7 @@ export default function LandingClient() {
 
         {/* Auth form */}
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <AuthForm />
+          <AuthForm onEnter={handleEnter} />
         </div>
 
         <p

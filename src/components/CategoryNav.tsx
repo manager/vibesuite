@@ -11,6 +11,7 @@ interface CategoryNavProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
   onOpenRecommendations: () => void;
+  onOpenWhyModal: () => void;
   allCompleted: boolean;
 }
 
@@ -21,6 +22,7 @@ export default function CategoryNav({
   collapsed,
   onToggleCollapse,
   onOpenRecommendations,
+  onOpenWhyModal,
   allCompleted,
 }: CategoryNavProps) {
   return (
@@ -37,6 +39,8 @@ export default function CategoryNav({
         borderRight: '1px solid var(--border)',
         overflowY: 'auto',
         padding: '1.5rem 0',
+        display: 'flex',
+        flexDirection: 'column',
         transform: collapsed ? 'translateX(-260px)' : 'translateX(0)',
         transition: 'transform 0.25s ease',
       }}
@@ -224,6 +228,36 @@ export default function CategoryNav({
           </button>
         );
       })}
+
+      {/* Bottom spacer + "Why do I need this?" */}
+      <div style={{ flex: 1 }} />
+      <div
+        style={{
+          padding: '1.25rem 1.75rem 0.5rem',
+          borderTop: '1px solid var(--border)',
+          marginTop: '1.25rem',
+        }}
+      >
+        <button
+          onClick={onOpenWhyModal}
+          style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.78rem',
+            fontStyle: 'italic',
+            color: 'var(--text-tertiary)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            textUnderlineOffset: '3px',
+            padding: 0,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-tertiary)'; }}
+        >
+          Why do I need this?
+        </button>
+      </div>
     </nav>
   );
 }
