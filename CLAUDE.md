@@ -55,10 +55,21 @@ The app uses a strict 3-tier font system. Do NOT mix these:
 - **Tags/badges** (counters, difficulty, time, tool tags): Jost (`font-ui`), 0.65rem, `--text-tertiary`
 - **Headings**: Playfair Display (`font-display`), 1.4rem — ONLY in the right detail panel skill title
 
+### Z-Index Layering (strict)
+| Layer | z-index | Element |
+|-------|---------|---------|
+| Paper grain | 9999 | `body::after` (pointer-events: none) |
+| Guide overlay | 70 | Full-screen 1:1 replica |
+| Modals | 60 | Why modal, Recommendation modal |
+| Panels | 50 | CategoryNav (left), SkillDetailPanel (right) |
+| Expand button | 31 | Sidebar expand ›  when collapsed |
+| Content | default | Main skill grid |
+
 ### UX Principles
 - **Never push content when panels open.** Left sidebar and right detail panel are fixed overlays (z-index 50). Main content is always centered.
-- **Smooth everything.** All interactive elements have 0.15s ease transitions (globally set in CSS). Panel open/close: 0.2s. Category switching AND filter switching: content fades out 150ms, swaps, fades in. Progress bar lerps smoothly. Never jump.
+- **Smooth everything.** All interactive elements have 0.15s ease transitions (globally set in CSS). Panel open/close: 0.2s. Category switching AND filter switching: content fades out 150ms → swap data → fade in 50ms (uses `transitioning` state). Progress bar lerps smoothly. Never jump.
 - **Hover + active states on all buttons.** Hover fills or changes border/text to accent. Mousedown scales to 96-98%. See ENTER, Mark as Learned, Copy Instruction buttons.
+- **Modal closing pattern:** `setClosing(true)` → `setTimeout(180ms)` → `onClose()`. This allows the exit animation (animate-modal-out) to play before unmount.
 - **Text is not selectable** on skill cards, section headers, and counters (`userSelect: 'none'`).
 - **Close on "Mark as Learned"** — the detail panel closes when user marks a skill as learned (not on unmark).
 - **Click-to-dismiss** — clicking empty space in the main skill map area closes the right panel. Clicking cards does NOT close it (stopPropagation on card grid).
@@ -88,6 +99,7 @@ src/
 │   ├── RecommendationModal.tsx          — "What to Learn Next?" center-screen modal
 │   ├── SkillCard.tsx                    — Card with katakana watermark (center-top), custom tooltip
 │   └── SkillDetailPanel.tsx             — Right panel: skill details + emphasized "How to learn this" block
+│   (SkillIcons.tsx DELETED — katakana replaced all skill icons)
 ├── data/
 │   └── skills.ts                        — ALL 10 categories + 45 skills + helpers
 ├── lib/
@@ -174,7 +186,7 @@ NEXTAUTH_URL=https://vibesuite.vercel.app
 ## Common Tasks
 
 ### Add a new skill
-Edit `src/data/skills.ts` → add a `Skill` object to the appropriate category's `skills` array. The katakana is auto-derived from the first letter. Card, progress tracking, percentages, recommendations, and search all update automatically.
+Edit `src/data/skills.ts` → add a `Skill` object to the appropriate category's `skills` array. The katakana is auto-derived from the first letter via `KATAKANA_MAP`. No icon needed — `SkillIcons.tsx` is deleted. Card, progress tracking, percentages, recommendations, and search all update automatically.
 
 ### Add a new category
 Edit `src/data/skills.ts` → add a `SkillCategory` object to the `categories` array. Add a corresponding icon in `src/components/CategoryIcons.tsx`.

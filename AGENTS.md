@@ -53,11 +53,22 @@ There are exactly 3 tiers. Using the wrong font at the wrong size creates visual
 - No shadows. No gradients on fills. No border-radius (square aesthetic).
 - Paper grain texture is on `body::after` at z-index 9999 with `pointer-events: none` — never remove
 
+### CSS Keyframes (globals.css)
+| Keyframe | Duration | Usage |
+|----------|----------|-------|
+| `slide-in` / `slide-out` | 0.2s | Right detail panel enter/exit |
+| `slide-in-left` | 0.25s | Left sidebar enter |
+| `modal-in` / `modal-out` | 0.2s / 0.15s | Modal fade+scale |
+| `guidePulse` | 2s infinite | Pulsing glow on guide overlay instruction block + Mark as Learned |
+| `loaderFadeIn` | — | Loader message text fade on landing page |
+
 ### Layout Rules
 - Left sidebar (CategoryNav): 260px, fixed overlay at z-index 50. Slides via translateX. Never pushes content.
 - Right detail panel (SkillDetailPanel): max 420px, fixed overlay at z-index 50. Slides in/out.
 - Modals: z-index 60, center-screen.
 - Guide overlay: z-index 70, full-screen.
+- Paper grain: z-index 9999, `body::after`, `pointer-events: none`.
+- Expand sidebar button: z-index 31 (below panels, above content).
 - Main content: always centered, no left padding for sidebar. Sidebar overlays on top.
 - Navbar: 58px height. All dependent offsets (sidebar top, main paddingTop, expand button) must match.
 - Skill cards: `userSelect: 'none'`. Section headers: `userSelect: 'none'`.
@@ -87,7 +98,8 @@ The database is **shared with the kemmio project**. Every Redis key MUST use the
 - All components are `'use client'` with inline styles using CSS variables
 - No component library — everything is custom React + CSS
 - Buttons use the `navBtnStyle` pattern: 36×36px, `--bg-card`, `--border-strong`, hover turns `--accent`
-- Modals use the `closing` state pattern: set closing → setTimeout → call onClose (allows exit animation)
+- Modals use the `closing` state pattern: `setClosing(true)` → `setTimeout(180ms)` → `onClose()` (allows exit animation to play before unmount)
+- Transition pattern for category/filter switching: `setTransitioning(true)` → `setTimeout(150ms)` → swap data → `setTimeout(50ms)` → `setTransitioning(false)` (content fades via opacity tied to `transitioning` state)
 - Tooltips: custom div elements with opacity/transform transitions, never native `title` attributes
 - Landing page uses `next/dynamic` with `ssr: false` for Three.js components
 
@@ -99,6 +111,18 @@ The database is **shared with the kemmio project**. Every Redis key MUST use the
 
 ### Guide Overlay (map-client.tsx)
 1:1 replica of the actual UI using real data from `categories` and `skills`. Three numbered steps with accent-red square badges. Uses `showGuideModal` / `guideClosing` state. The instruction block and Mark as Learned button have pulsing glow (`guidePulse` keyframe in globals.css).
+
+### State Management (map-client.tsx)
+All app state lives in `MapClient` — there is no global store. 12 `useState` hooks:
+- `progress` — user's skill completion data (from server or in-memory in dev)
+- `selectedSkillId` / `focusCategoryId` — current selection
+- `sidebarCollapsed` — left panel visibility
+- `transitioning` — controls fade opacity during category/filter switches
+- `showRecommendations` — recommendation modal open
+- `showWhyModal` / `whyClosing` — "Why do I need this?" modal + exit animation
+- `showGuideModal` / `guideClosing` — guide overlay + exit animation
+- `searchQuery` — search input value
+- `showFilter` — `'all' | 'learned' | 'not-learned'`
 
 ### Recommendation Engine (`src/lib/recommendations.ts`)
 Pure function, no React. Scoring: +30 unlocked, +20 hub, +10 difficulty match, +5 quick win, -50 locked. Greedy selection with -15 same-category diversity penalty. Returns `Recommendation[]` with typed reasons.
